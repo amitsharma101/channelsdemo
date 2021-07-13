@@ -1,17 +1,22 @@
 # chat/consumers.py
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.consumer import AsyncConsumer
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
 
+        
+
         # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
+
+        print("In COnnect")
 
         await self.accept()
 
@@ -44,3 +49,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message
         }))
+
+
+class PingConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        pass
+
+    # Receive message from WebSocket
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        message = text_data_json['message']
+
+        # Send message to WebSocket
+        output = processLogic(message)
+
+        await self.send(text_data=json.dumps({
+            'message': output
+        }))
+
+def processLogic(cardId):
+    if cardId == "12345":
+        return "Card " + cardId + " - Access Granted"
+    else : 
+        return "Card " + cardId + " - Access Denied"
