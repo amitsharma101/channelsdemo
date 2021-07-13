@@ -63,8 +63,22 @@ class PingConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
 
+        print()
+        print()
+
+        print("Received Card number "+message)
+        print("Verifying Card number "+message)
+
         # Send message to WebSocket
-        output = processLogic(message)
+        flag,output = processLogic(message)
+
+        if(flag):
+            print("User Verified. Sending data back")
+        else:
+            print("User Not verified Sending data back")
+
+        print()
+        print()
 
         await self.send(text_data=json.dumps({
             'message': output
@@ -72,6 +86,6 @@ class PingConsumer(AsyncWebsocketConsumer):
 
 def processLogic(cardId):
     if cardId == "12345":
-        return "Card " + cardId + " - Access Granted"
+        return (True,"Card " + cardId + " - Access Granted")
     else : 
-        return "Card " + cardId + " - Access Denied"
+        return (False,"Card " + cardId + " - Access Denied")
