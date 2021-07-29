@@ -2,6 +2,12 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.consumer import AsyncConsumer
+import requests
+import json
+
+CLUB_ID = 53821
+CLUB_SECRET = 'CS-53821-CHECKIN7622-PHddNeGxUGVPGJsEHKerITdR3'
+API_KEY = '3f5bc58a9b6e11eba64b021b958a09b1'
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -85,7 +91,25 @@ class PingConsumer(AsyncWebsocketConsumer):
         }))
 
 def processLogic(cardId):
+
     if cardId == "12345":
         return (True,"Card " + cardId + " - Access Granted")
-    else : 
-        return (False,"Card " + cardId + " - Access Denied")
+
+    api_url = "https://virtuagym.com/api/v0/club/"+str(CLUB_ID)+"/devices?club_secret="+CLUB_SECRET+"&api_key="+API_KEY
+    body = {"card_id": cardId, "action": "identification", "application": "All right Now Ltd Custom Check-in","version":"1"}
+    headers =  {"Content-Type":"application/json"}
+    response = requests.put(api_url, data=json.dumps(body), headers=headers)
+    
+    res = response.json()
+    print(response.json())
+    print()
+
+    if(res['statuscode'] in range(200,300)):
+        access = res['result']['open_relay']
+        if access:
+            return (True,"Card " + cardId + " - Access Granted")
+        else:
+            return (False,"Card " + cardId + " - Access Denied")
+    else:
+        return (False,"API Call Failed")
+        
