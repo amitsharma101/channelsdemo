@@ -93,6 +93,7 @@ class PingConsumer(AsyncWebsocketConsumer):
 
         params = parse_qs(self.scope["query_string"].decode())
         token = params['token'][0]
+        print()
         print("Got the Token : "+token)
 
         try:
@@ -105,7 +106,8 @@ class PingConsumer(AsyncWebsocketConsumer):
             else:
                 print("Token Expired or not found")
         except:
-            pass
+            print('Identified Invalid token')
+            print()
 
     async def disconnect(self, close_code):
         pass
