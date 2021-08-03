@@ -34,23 +34,49 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'client_%s' % self.room_name
 
-        await self.channel_layer.group_add(
+        params = parse_qs(self.scope["query_string"].decode())
+        token = params['param'][0]
+        print(token)
+
+        if token=="web":
+            print("In COnnect")
+            await self.channel_layer.group_add(
             self.room_group_name,
-            self.channel_name
-        )
+            self.channel_name)
+            await self.accept()
+        else:
+            try:
+                tkn = await self.get_token(token)
+                print(tkn)
+                user = await self.get_user(tkn)
 
-        print("In COnnect")
+                print(user)
 
-        await self.registerConnect()
-        # print(Room.objects.all())
+                if user:
+                    # Join room group
+                    await self.channel_layer.group_add(
+                        self.room_group_name,
+                        self.channel_name
+                    )
 
-
-        await self.accept()
-        
+                    await self.registerConnect(user)
+                    await self.accept()
+                else:
+                    print("Token Expired or not found")
+            except:
+                pass
 
     @database_sync_to_async
-    def registerConnect(self):
-        Room.objects.add(self.room_name, self.channel_name, self.scope["user"])
+    def get_token(self,token):
+        return Token.objects.get(key=token)
+
+    @database_sync_to_async
+    def get_user(self,token):
+        return token.user
+
+    @database_sync_to_async
+    def registerConnect(self,user):
+        Room.objects.add(self.room_name, self.channel_name, user)
         self.printObj(Room.objects.all())
 
     @database_sync_to_async
@@ -73,27 +99,60 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         )
 
     # Receive message from WebSocket
-    @touch_presence
+    # @touch_presence
     async def receive(self, text_data):
+        print("In receive")
+        print(json.loads(text_data))
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
 
-        # Send message to room group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message
-            }
-        )
+        if 'admin' in text_data_json.keys():
+            message = text_data_json['admin']
+            to_client = text_data_json['to_client']
+
+            # Send message to room group
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'admin_message',
+                    'message': message,
+                    'to_client':to_client
+                }
+            )
+        else:
+
+            message = text_data_json['message']
+
+            # Send message to room group
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': message,
+                }
+            )
 
     # Receive message from room group
     async def chat_message(self, event):
+        print("In chat_message")
+        print(event)
         message = event['message']
-
+        
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message
+        }))
+
+    # Receive message from room group
+    async def admin_message(self, event):
+        print("In admin_message")
+        print(event)
+        message = event['message']
+        to_client = event['to_client']
+
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps({
+            'admin_message': message,
+            'to_client':to_client
         }))
 
 class ChatConsumer(AsyncWebsocketConsumer):

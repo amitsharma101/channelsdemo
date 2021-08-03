@@ -31,7 +31,8 @@ def client(request, room_hash):
     room_name, room_id = room_hash.split('+')
     connectedClients = Presence.objects.filter(room_id=room_id)
     return render(request, 'clients/client.html', {
-        "connectedclients":connectedClients
+        "connectedclients":connectedClients,
+        'room_name': room_name
     })   
 
 @csrf_exempt
@@ -46,5 +47,5 @@ def login(request):
         return Response({'error':'Invalid Credentials'},status=400)
     
     token, _ = Token.objects.get_or_create(user=user)
-    return Response({'token':token.key},status=200)
+    return Response({'token':token.key,'user':user.id},status=200)
 
