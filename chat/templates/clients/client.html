@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Client List</title>
+</head>
+<body>
+
+    <script>   
+        function openRoom(roomId,roomName) {
+            window.location.pathname = '/client/id/' + roomId + '/';
+        }
+    </script>
+
+    {% for client in connectedclients %}
+        <input type="radio" name="client">{{client}}<br>
+    {% endfor %}
+
+
+
+</body>
+</html>

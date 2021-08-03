@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Client List</title>
+</head>
+<body>
+
+    <script>   
+        function openRoom(roomId,roomName) {
+            window.location.pathname = '/client/id/' + roomName + '+' + roomId + '/';
+        }
+    </script>
+
+    {% for room in rooms %}
+    <ul>
+        <li id="{{room.id}}" onclick="openRoom('{{room.id}}','{{room.channel_name}}')">{{room}}</li>
+    </ul>
+{% endfor %}
+
+
+
+</body>
+</html>
