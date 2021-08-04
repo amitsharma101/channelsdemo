@@ -92,7 +92,7 @@ class PingConsumer(AsyncWebsocketConsumer):
 
 def processLogic(cardId):
 
-    if cardId == "12345":
+    if cardId == "12345" or cardId == "8901207019234":
         return (True,"Card " + cardId + " - Access Granted")
 
     api_url = "https://virtuagym.com/api/v0/club/"+str(CLUB_ID)+"/devices?club_secret="+CLUB_SECRET+"&api_key="+API_KEY
