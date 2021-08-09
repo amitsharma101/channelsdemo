@@ -73,7 +73,16 @@ class PingConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
+
+        print(type(text_data_json))
+        print(text_data_json)
+
         message = text_data_json['message']
+
+        print(type(message))
+        print(message)
+        
+        
 
         print()
         print()
