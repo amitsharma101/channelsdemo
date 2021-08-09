@@ -87,8 +87,8 @@ class PingConsumer(AsyncWebsocketConsumer):
         print()
         print()
 
-        print("Received Card number "+message)
-        print("Verifying Card number "+message)
+        print("Received Card number "+str(message['memberId']))
+        print("Verifying Card number "+str(message['memberId']))
 
         # Send message to WebSocket
         flag,output = processLogic(message)
