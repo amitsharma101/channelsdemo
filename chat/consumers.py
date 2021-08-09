@@ -131,7 +131,7 @@ class PingConsumer(AsyncWebsocketConsumer):
 
 
 def processLogic(messageJson):
-    messageJson = json.loads(messageJson)
+    # messageJson = json.loads(messageJson)
 
     memberId = messageJson['memberId']
     clubId = messageJson['clubId']
