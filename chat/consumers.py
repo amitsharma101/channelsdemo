@@ -102,7 +102,7 @@ class PingConsumer(AsyncWebsocketConsumer):
         print()
 
         await self.send(text_data=json.dumps({
-            'message': output
+            'message': output,'canEnter':flag
         }))
 
 # def processLogic(cardId):
