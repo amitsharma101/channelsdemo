@@ -91,7 +91,7 @@ class PingConsumer(AsyncWebsocketConsumer):
         print("Verifying Card number "+str(message['memberId']))
 
         # Send message to WebSocket
-        flag,output = processLogic(message)
+        flag,output,outputToSend = processLogic(message)
 
         if(flag):
             print("User Verified. Sending data back")
@@ -101,8 +101,9 @@ class PingConsumer(AsyncWebsocketConsumer):
         print()
         print()
 
+       
         await self.send(text_data=json.dumps({
-            'message': output,'canEnter':flag
+            'message': outputToSend,'canEnter':flag,"memberId": message['memberId']
         }))
 
 # def processLogic(cardId):
@@ -139,9 +140,9 @@ def processLogic(messageJson):
     try:
         acc = cache[(memberId,clubId)]
         if acc:
-            return (True,"Card " + str(memberId) + " - Access Granted")
+            return (True,"Card " + str(memberId) + " - Access Granted","Access Granted")
         else:
-            return (False,"Card " + str(memberId) + " - Access Denied")
+            return (False,"Card " + str(memberId) + " - Access Denied","Access Denied")
     except:
         pass
 
@@ -158,9 +159,9 @@ def processLogic(messageJson):
         access = res['canEnter']
         cache[(memberId,clubId)] = access
         if access:
-            return (True,"Card " + str(memberId) + " - Access Granted")
+            return (True,"Card " + str(memberId) + " - Access Granted","Access Granted")
         else:
-            return (False,"Card " + str(memberId) + " - Access Denied")
+            return (False,"Card " + str(memberId) + " - Access Denied","Access Denied")
     else:
         return (False,"API Call Failed")
         
