@@ -91,7 +91,7 @@ class PingConsumer(AsyncWebsocketConsumer):
         print("Verifying Card number "+str(message['memberId']))
 
         # Send message to WebSocket
-        flag,output,outputToSend = processLogic(message)
+        flag,output,outputToSend,responseType = processLogic(message)
 
         if(flag):
             print("User Verified. Sending data back")
@@ -103,7 +103,7 @@ class PingConsumer(AsyncWebsocketConsumer):
 
        
         await self.send(text_data=json.dumps({
-            'message': outputToSend,'canEnter':flag,"memberId": message['memberId']
+            'message': outputToSend,'canEnter':flag,"memberId": message['memberId'],"response_type":responseType
         }))
 
 # def processLogic(cardId):
@@ -134,34 +134,42 @@ class PingConsumer(AsyncWebsocketConsumer):
 def processLogic(messageJson):
     # messageJson = json.loads(messageJson)
 
+    ACCESS = "access"
+    SYNC = "sync"
+
     memberId = messageJson['memberId']
     clubId = messageJson['clubId']
+    requestType = messageJson['request_type']
 
-    try:
-        acc = cache[(memberId,clubId)]
-        if acc:
-            return (True,"Card " + str(memberId) + " - Access Granted","Access Granted")
+    if requestType == ACCESS:
+        try:
+            acc = cache[(memberId,clubId)]
+            if acc:
+                return (True,"Card " + str(memberId) + " - Access Granted","Access Granted",ACCESS)
+            else:
+                return (False,"Card " + str(memberId) + " - Access Denied","Access Denied",ACCESS)
+        except:
+            pass
+
+        api_url = PGYM_BASE_URL+"api/v2/AccessControl/ValidateMemberVisit"
+        body = messageJson
+        headers =  {"Content-Type":"application/json","X-Client-Id":PGYM_CLIENT_ID,"X-Client-Secret":PGYM_CLIENT_SECRET}
+        response = requests.post(api_url, data=json.dumps(body), headers=headers)
+        
+        res = response.json()
+        print(response.json())
+        print()
+
+        if(response.status_code in range(200,300)):
+            access = res['canEnter']
+            cache[(memberId,clubId)] = access
+            if access:
+                return (True,"Card " + str(memberId) + " - Access Granted","Access Granted",ACCESS)
+            else:
+                return (False,"Card " + str(memberId) + " - Access Denied","Access Denied",ACCESS)
         else:
-            return (False,"Card " + str(memberId) + " - Access Denied","Access Denied")
-    except:
-        pass
-
-    api_url = PGYM_BASE_URL+"api/v2/AccessControl/ValidateMemberVisit"
-    body = messageJson
-    headers =  {"Content-Type":"application/json","X-Client-Id":PGYM_CLIENT_ID,"X-Client-Secret":PGYM_CLIENT_SECRET}
-    response = requests.post(api_url, data=json.dumps(body), headers=headers)
+            return (False,"API Call Failed","Member does not exists","Member does not exists")
     
-    res = response.json()
-    print(response.json())
-    print()
-
-    if(response.status_code in range(200,300)):
-        access = res['canEnter']
-        cache[(memberId,clubId)] = access
-        if access:
-            return (True,"Card " + str(memberId) + " - Access Granted","Access Granted")
-        else:
-            return (False,"Card " + str(memberId) + " - Access Denied","Access Denied")
-    else:
-        return (False,"API Call Failed")
+    elif requestType == "sync":
+        return (True,"Card " + str(memberId) + " - Data Received to Server","Data Received to Server",SYNC) 
         
